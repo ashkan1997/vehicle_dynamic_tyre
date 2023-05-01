@@ -455,73 +455,259 @@ fprintf('SVy     = %6.3f\n',SVy);
 fprintf('alpha_y = %6.3f\n',alpha__y);
 fprintf('Ky      = %6.3f\n',By*Cy*Dy/tyre_coeffs.FZ0);
 
-%% MZ(alpha)
+%% SELF ALLIGNING MOMENT k = 0 , Fz = 220  [ashkan]
 
-[TData0, ~] = intersect_table_data( GAMMA_3, FZ_220 );
-% cut the tails
-idx.ALPHA = -0.2 < TData0.SA & TData0.SA < 0.2;
-ALPHA_vec_1 = TData0(idx.ALPHA , :);
+[TData , ~] = intersect_table_data( GAMMA_0, FZ_220 );
+% idx.ALPHA = -0.2 < TData.SA & TData.SA < 0.2;
+% TData0 = TData(idx.ALPHA , :);
+% TData0 = smoothdata(TData0);
+cut = 104:840;
+TData0 = TData(cut , :);
+plot_selected_data(TData0);
 
-FY_vec    = ALPHA_vec_1.FY;
-MZ_vec    = ALPHA_vec_1.MZ;
-ALPHA_VEC = ALPHA_vec_1.SA;
-ALPHA_vec = ALPHA_vec_1.SA;
-zeros_vec = zeros(size(ALPHA_vec_1.SA));
-ones_vec  = ones(size(ALPHA_vec_1.SA));
-
-% MZr_vec = MF96_MZr_vec(zeros_vec , ALPHA_vec , zeros_vec , ...
-%                             FZ0*ones_vec, tyre_coeffs);
-% t_vec = MF96_t_vec(zeros_vec , ALPHA_vec , zeros_vec , ...
-%                             FZ0*ones_vec, tyre_coeffs);
-% MZ0_vec = MF96_MZ0_vec(t_vec , FY_vec , MZr_vec);
-% 
-% figure
-% plot( KAPPA_vec,MZ_vec , 'o')
-% hold on
-% plot( KAPPA_vec,MZ0_vec , '-')
 
 % Guess values for parameters to be optimised
-%       [qBz1 , qBz9 , qBz10 , qCz1 , qDz1 , qDz2 , qDz3 , qDz4 , qDz6 , qEz1 , qEz4 , qHz1] 
-% P0_mz = [   0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1];
-P0_mz = [   1, -1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0];
+%       [qBz1 , qBz9 , qBz10 , qCz1 , qDz1  , qDz6 , qEz1 , qEz4 , qHz1] 
+% P0_mz = [   0.1, 0.8, 0.5, 0.2, 0.1, 0.1, 0.1, -0.1, -0.1, 0.1, 0.1, 0.3];
+P0_mz = [      0, 0, 0, 0, 0, 0, 0, 0, 0];
 lb_mz = [];
-ub_mz = []
+ub_mz = [];
 
-SA_vec = linspace(-0.3,0.3,length(ALPHA_vec))
-[P_fz_nom_mz , fval , exitflag] = fmincon(@(P)resid_pure_Mz(P,MZ_vec , 0 , ALPHA_vec , 0 , FZ0 ,tyre_coeffs , FY_vec) , ...
-                                        P0_mz , [],[],[],[],lb_mz,ub_mz);
+zeros_vec = zeros(size(TData0));
+ones_vec = ones(size(TData0));
 
-tyre_coeffs.qBz1 = P_fz_nom_mz(1) ; % 1
-tyre_coeffs.qBz9 = P_fz_nom_mz(2) ;  
-tyre_coeffs.qBz10 = P_fz_nom_mz(3) ;
-tyre_coeffs.qCz1 = P_fz_nom_mz(4) ; 
-tyre_coeffs.qDz1 = P_fz_nom_mz(5) ;
-tyre_coeffs.qDz2 = P_fz_nom_mz(6) ;
-tyre_coeffs.qDz3 = P_fz_nom_mz(7) ;
-tyre_coeffs.qDz4 = P_fz_nom_mz(8) ;
-tyre_coeffs.qDz6 = P_fz_nom_mz(9) ;
-tyre_coeffs.qEz1 = P_fz_nom_mz(10) ;
-tyre_coeffs.qEz4 = P_fz_nom_mz(11) ;
-tyre_coeffs.qHz1 = P_fz_nom_mz(12) ;
+KAPPA_VEC = TData0.SL;
+ALPHA_vec = TData0.SA;
+FZ_vec = TData0.FZ;
+FZ0 = mean(FZ_vec);
+MZ_vec = TData0.MZ;
+FY_vec = TData0.FY;
+SA_vec = linspace(max(ALPHA_vec),min(ALPHA_vec),length(ALPHA_vec));
 
-SA_zeros = zeros(size(SA_vec));
-SA_ones = ones(size(SA_vec));
+figure()
+plot(ALPHA_vec , MZ_vec , '.');
 
+[P_fz_nom_mz , ~ , ~] = fmincon(@(P)resid_pure_Mz(P , MZ_vec , 0 , ALPHA_vec , 0 , FZ0 ,FY_vec ,  tyre_coeffs ), ...
+    P0_mz , [],[],[],[],lb_mz , ub_mz);
 
-MZr_vec = MF96_MZr_vec(SA_zeros , SA_vec , SA_zeros , ...
-                            FZ0*SA_ones, tyre_coeffs);
-t_vec = MF96_t_vec(SA_zeros , SA_vec , SA_zeros , ...
-                            FZ0*SA_ones, tyre_coeffs);
-MZ0_vec = MF96_MZ0_vec(t_vec , FY_vec , MZr_vec);
+tyre_coeffs.qBz1 =  P_fz_nom_mz(1);
+tyre_coeffs.qBz9 =  P_fz_nom_mz(2);
+tyre_coeffs.qBz10 =  P_fz_nom_mz(3);
+tyre_coeffs.qCz1 =  P_fz_nom_mz(4);
+tyre_coeffs.qDz1 =  P_fz_nom_mz(5);
+% tyre_coeffs.qDz2 =  P_fz_nom_mz(6);
+% tyre_coeffs.qDz3 =  P_fz_nom_mz(7);
+% tyre_coeffs.qDz4 =  P_fz_nom_mz(8);
+tyre_coeffs.qDz6 =  P_fz_nom_mz(6);
+tyre_coeffs.qEz1 =  P_fz_nom_mz(7);
+tyre_coeffs.qEz4 =  P_fz_nom_mz(8);
+tyre_coeffs.qHz1 =  P_fz_nom_mz(9);
 
+% tmp_fy = MF96_FY0_vec(zeros_vec , SA_vec , zeros_vec , FZ_vec , tyre_coeffs);
+
+MZr_vec = MF96_MZr_vec(zeros_vec , SA_vec , zeros_vec , FZ0*ones_vec , tyre_coeffs); 
+t_vec = MF96_t_vec(zeros_vec , SA_vec , zeros_vec , FZ0*ones_vec , tyre_coeffs );
+MZ0_nom = MF96_MZ0_vec(t_vec , FY_vec , MZr_vec);
 
 figure('Name','MZ0(Fz0)')
-plot(ALPHA_vec_1.SA,ALPHA_vec_1.MZ,'o')
+plot(TData0.SA,TData0.MZ,'o')
 hold on
 %plot(TDataSub.KAPPA,FX0_fz_nom_vec,'-')
-plot(SA_vec,MZ0_vec,'-','LineWidth',2)
+plot(SA_vec,MZ0_nom,'-','LineWidth',2)
 xlabel('$\alpha$ [deg]')
 ylabel('$M_{z0}$ [Nm/s]')
+
+
+
+
+
+
+TData = intersect_table_data( GAMMA_0, FZ_220 );
+idx.ALPHA = -0.2 < TData.SA & TData.SA < 0.2;
+TData0 = TData(idx.ALPHA , :);
+% TData0 = smoothdata(TData0);
+plot_selected_data(TData0);
+% Guess values for parameters to be optimised
+%       [qBz1 , qBz9 , qBz10 , qCz1 , qDz1  , qDz6 , qEz1 , qEz4 , qHz1] 
+% P0_mz = [   0.1, 0.8, 0.5, 0.2, 0.1, 0.1, 0.1, -0.1, -0.1, 0.1, 0.1, 0.3];
+P0_mz = [      0, 0, 0, 0, 0, 0, 0, 0, 0];
+lb_mz = [];
+ub_mz = [];
+
+zeros_vec = zeros(size(TData0));
+ones_vec = ones(size(TData0));
+
+KAPPA_VEC = TData0.SL;
+ALPHA_vec = TData0.SA;
+FZ_vec = TData0.FZ;
+FZ0 = mean(FZ_vec);
+MZ_vec = TData0.MZ;
+FY_vec = TData0.FY;
+SA_vec = linspace(max(ALPHA_vec),min(ALPHA_vec),length(ALPHA_vec));
+
+figure()
+plot(ALPHA_vec , MZ_vec , '.');
+
+[P_fz_nom_mz , ~ , exitflag] = fmincon(@(P)resid_pure_Mz(P , MZ_vec , 0 , ALPHA_vec , 0 , FZ0 ,FY_vec ,  tyre_coeffs ), ...
+    P0_mz , [],[],[],[],lb_mz , ub_mz);
+
+tyre_coeffs.qBz1 =  P_fz_nom_mz(1);
+tyre_coeffs.qBz9 =  P_fz_nom_mz(2);
+tyre_coeffs.qBz10 =  P_fz_nom_mz(3);
+tyre_coeffs.qCz1 =  P_fz_nom_mz(4);
+tyre_coeffs.qDz1 =  P_fz_nom_mz(5);
+% tyre_coeffs.qDz2 =  P_fz_nom_mz(6);
+% tyre_coeffs.qDz3 =  P_fz_nom_mz(7);
+% tyre_coeffs.qDz4 =  P_fz_nom_mz(8);
+tyre_coeffs.qDz6 =  P_fz_nom_mz(6);
+tyre_coeffs.qEz1 =  P_fz_nom_mz(7);
+tyre_coeffs.qEz4 =  P_fz_nom_mz(8);
+tyre_coeffs.qHz1 =  P_fz_nom_mz(9);
+
+% tmp_fy = MF96_FY0_vec(zeros_vec , SA_vec , zeros_vec , FZ_vec , tyre_coeffs);
+
+MZr_vec = MF96_MZr_vec(zeros_vec , SA_vec , zeros_vec , FZ0*ones_vec , tyre_coeffs); 
+t_vec = MF96_t_vec(zeros_vec , SA_vec , zeros_vec , FZ0*ones_vec , tyre_coeffs );
+MZ0_nom = MF96_MZ0_vec(t_vec , FY_vec , MZr_vec);
+
+figure('Name','MZ0(Fz0)')
+plot(TData0.SA,TData0.MZ,'o')
+hold on
+%plot(TDataSub.KAPPA,FX0_fz_nom_vec,'-')
+plot(SA_vec,MZ0_nom,'-','LineWidth',2)
+xlabel('$\alpha$ [deg]')
+ylabel('$M_{z0}$ [Nm/s]')
+
+
+%% SELF ALLIGNING MOMENT k = 0 , variable Load
+
+TDatadfz = GAMMA_0;
+idx.ALPHA = -0.25 < TDatadfz.SA & TDatadfz.SA < 0.25;
+TData0dfz = TDatadfz(idx.ALPHA , :);
+TData0 = smoothdata(TData0);
+
+% figure()
+% plot(TData0dfz.FZ)
+
+% cut = [104:840, 978:1722, 1820:2607, 2757:3492, 3586:4377];
+% TData0dfz = TDatadfz(cut , :);
+plot_selected_data(TData0dfz);
+
+% Guess values for parameters to be optimised
+%       [qBz2 , qBz3 , qDz7 , qEz2 , qEz3 , qHz2 , qDz2] 
+P0_mz_fz = [0 ,   0   ,  0  ,    0 ,   0 ,  0 , 0  ];
+% P0_mz_fz = [  -3,  2,  10,  -4,  0,  3,  -3 , 5 ];
+lb = [];
+ub = [];
+
+KAPPA_VEC = TData0dfz.SL;  % zero
+ALPHA_vec = TData0dfz.SA;
+FZ_vec = TData0dfz.FZ;
+% FZ0 = mean(FZ_vec);
+MZ_vec = TData0dfz.MZ;
+FY_vec = TData0dfz.FY;
+SA_vec_mz = linspace(max(ALPHA_vec),min(ALPHA_vec),length(ALPHA_vec));
+% SA_vec_mz = linspace(0.3 , -0.3 , length(TData0dfz.SA));
+% SA_vec_mz = linspace(0.3 , -0.3 , 4023);
+% figure()
+% plot(ALPHA_vec , MZ_vec , '.');
+
+
+[P_dfz,~,exitflag] = fmincon(@(P)resid_pure_MZ_varFz(P,MZ_vec, 0, ALPHA_vec, 0 , FZ_vec, FY_vec , tyre_coeffs),...
+                               P0_mz_fz,[],[],[],[],lb,ub);
+
+
+tyre_coeffs.qBz2 = P_dfz(1);
+tyre_coeffs.qBz3 = P_dfz(2);
+tyre_coeffs.qDz7 = P_dfz(3);
+tyre_coeffs.qEz2 = P_dfz(4);
+tyre_coeffs.qEz3 = P_dfz(5);
+tyre_coeffs.qHz2 = P_dfz(6);
+tyre_coeffs.qDz2 = P_dfz(7);
+% tyre_coeffs.qHz4 = P(8);
+
+tmp_zeros = zeros(size(SA_vec_mz));
+tmp_ones  = ones(size(SA_vec_mz));
+
+FY_vec_pred = MF96_FY0_vec(tmp_zeros , SA_vec_mz , tmp_zeros , FZ_vec , tyre_coeffs);
+
+res_MZ0_fz_vec = resid_pure_MZ_varFz(P_dfz , MZ_vec , 0 , SA_vec_mz , 0 , FZ_vec , FY_vec , tyre_coeffs);
+
+
+% FZ_220
+cut_1 = [1770:2630];
+tmp_data_1 = TData0dfz(cut_1 , :);
+tmp_sa_z_1 = linspace(max(ALPHA_vec),min(ALPHA_vec) , length(tmp_data_1.SA));
+tmp_zeros_1 = zeros(length(tmp_data_1.SA));
+ones_vec_1 = ones(length(tmp_data_1.SA));
+
+MZr_fz_1 = MF96_MZr_vec(tmp_zeros_1 , tmp_sa_z_1 , tmp_zeros_1 , mean(FZ_220.FZ)*ones_vec_1 , tyre_coeffs); 
+t_fz_1 = MF96_t_vec(tmp_zeros_1 , tmp_sa_z_1 , tmp_zeros_1 , mean(FZ_220.FZ)*ones_vec_1 , tyre_coeffs );
+FY_vec_pred = tmp_data_1.FY;
+MZ0_fz_1 = MF96_MZ0_vec(t_fz_1 , FY_vec_pred , MZr_fz_1);
+
+
+% FZ_440
+cut_2 = [3550:4380];
+tmp_data_2 = TData0dfz(cut_2 , :);
+tmp_sa_z_2 = linspace(max(ALPHA_vec),min(ALPHA_vec) , length(tmp_data_2.SA));
+tmp_zeros_2 = zeros(length(tmp_data_2.SA));
+ones_vec_2 = ones(length(tmp_data_2.SA));
+
+MZr_fz_2 = MF96_MZr_vec(tmp_zeros_2 , tmp_sa_z_2 , tmp_zeros_2 , mean(FZ_440.FZ)*ones_vec_2 , tyre_coeffs); 
+t_fz_2 = MF96_t_vec(tmp_zeros_2 , tmp_sa_z_2 , tmp_zeros_2 , mean(FZ_440.FZ)*ones_vec_2 , tyre_coeffs );
+FY_vec_pred = tmp_data_2.FY;
+MZ0_fz_2 = MF96_MZ0_vec(t_fz_2 , FY_vec_pred , MZr_fz_2);
+
+% FZ_700
+cut_3 = [950:1730];
+tmp_data_3 = TData0dfz(cut_3 , :);
+tmp_sa_z_3 = linspace(max(ALPHA_vec),min(ALPHA_vec) , length(tmp_data_3.SA));
+tmp_zeros_3 = zeros(length(tmp_data_3.SA));
+ones_vec_3 = ones(length(tmp_data_3.SA));
+
+MZr_fz_3 = MF96_MZr_vec(tmp_zeros_3 , tmp_sa_z_3 , tmp_zeros_3 , mean(FZ_700.FZ)*ones_vec_3 , tyre_coeffs); 
+t_fz_3 = MF96_t_vec(tmp_zeros_3 , tmp_sa_z_3 , tmp_zeros_3 , mean(FZ_700.FZ)*ones_vec_3 , tyre_coeffs );
+FY_vec_pred = tmp_data_3.FY;
+MZ0_fz_3 = MF96_MZ0_vec(t_fz_3 , FY_vec_pred , MZr_fz_3);
+
+% FZ_900
+cut_4 = [95:840];
+tmp_data_4 = TData0dfz(cut_4 , :);
+tmp_sa_z_4 = linspace(max(ALPHA_vec),min(ALPHA_vec) , length(tmp_data_4.SA));
+tmp_zeros_4 = zeros(length(tmp_data_4.SA));
+ones_vec_4 = ones(length(tmp_data_4.SA));
+
+MZr_fz_4 = MF96_MZr_vec(tmp_zeros_4 , tmp_sa_z_4 , tmp_zeros_4 , mean(FZ_700.FZ)*ones_vec_4 , tyre_coeffs); 
+t_fz_4 = MF96_t_vec(tmp_zeros_4 , tmp_sa_z_4 , tmp_zeros_4 , mean(FZ_700.FZ)*ones_vec_4 , tyre_coeffs );
+FY_vec_pred = tmp_data_4.FY;
+MZ0_fz_4 = MF96_MZ0_vec(t_fz_4 , FY_vec_pred , MZr_fz_4);
+
+% FZ_1120
+cut_5 = [2758:3493];
+tmp_data_5 = TData0dfz(cut_5 , :);
+tmp_sa_z_5 = linspace(max(ALPHA_vec),min(ALPHA_vec) , length(tmp_data_5.SA));
+tmp_zeros_5 = zeros(length(tmp_data_5.SA));
+ones_vec_5 = ones(length(tmp_data_5.SA));
+
+MZr_fz_5 = MF96_MZr_vec(tmp_zeros_5 , tmp_sa_z_5 , tmp_zeros_5 , mean(FZ_700.FZ)*ones_vec_5 , tyre_coeffs); 
+t_fz_5 = MF96_t_vec(tmp_zeros_5 , tmp_sa_z_5 , tmp_zeros_5 , mean(FZ_700.FZ)*ones_vec_5 , tyre_coeffs );
+FY_vec_pred = tmp_data_5.FY;
+MZ0_fz_5 = MF96_MZ0_vec(t_fz_5 , FY_vec_pred , MZr_fz_5);
+
+
+
+figure('Name','MZ0(Fz)')
+plot(TData0dfz.SA , TData0dfz.MZ , '.')
+hold on
+plot(tmp_sa_z_1 , MZ0_fz_1 , '-' , 'LineWidth',2)
+plot(tmp_sa_z_2 , MZ0_fz_2 , '-' , 'LineWidth',2)
+plot(tmp_sa_z_3 , MZ0_fz_3 , '-' , 'LineWidth',2)
+plot(tmp_sa_z_4 , MZ0_fz_4 , '-' , 'LineWidth',2)
+plot(tmp_sa_z_5 , MZ0_fz_5 , '-' , 'LineWidth',2)
+
+xlabel('$\alpha$ [-]')
+ylabel('$M_{Z0}$ [N]')
 
 
 

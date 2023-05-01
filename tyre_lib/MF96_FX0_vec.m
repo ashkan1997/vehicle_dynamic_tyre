@@ -1,6 +1,6 @@
 % Pure longitudinal force FX0
 % this function remap the sclar function to its vectorial form
-function [fx0_vec] = MF96_FX0(kappa_vec, alpha_vec, phi_vec, Fz_vec, tyre_data)
+function [fx0_vec] = MF96_FX0_vec(kappa_vec, alpha_vec, phi_vec, Fz_vec, tyre_data)
 
   
   fx0_vec = zeros(size(kappa_vec));
