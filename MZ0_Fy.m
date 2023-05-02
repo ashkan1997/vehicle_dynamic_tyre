@@ -465,6 +465,7 @@ MZr_vec = MF96_MZr_vec(zeros_vec , SA_vec , zeros_vec , FZ0*ones_vec , tyre_coef
 t_vec = MF96_t_vec(zeros_vec , SA_vec , zeros_vec , FZ0*ones_vec , tyre_coeffs );
 MZ0_nom = MF96_MZ0_vec(t_vec , FY_vec , MZr_vec);
 
+%%
 figure('Name','MZ0(Fz0)')
 plot(TData0.SA,TData0.MZ,'o')
 hold on
@@ -472,7 +473,9 @@ hold on
 plot(SA_vec,MZ0_nom,'-','LineWidth',2)
 xlabel('$\alpha$ [deg]')
 ylabel('$M_{z0}$ [Nm/s]')
+title(' Aligning moment $M_{z}$ , $F_{z}$ = 220 [N] , $kappa$ = 0 [-] , $gamma$ = 0 [deg]')
 
+%%
 res_Mz0 = resid_pure_Mz(P , MZ_vec , 0 , ALPHA_vec , 0 , FZ0 ,FY_vec ,  tyre_coeffs );
 R2 = 1 - res_Mz0;
 RMSE = sqrt(res_Mz0*sum(MZ_vec.^2)/length(ALPHA_vec));
@@ -856,6 +859,7 @@ MZ0_vargamma_vec_3 = MF96_MZ0_vec(t_vec_3 , FY_vec , MZr_vec_3);
 MZr_vec_4 = MF96_MZr_vec(KAPPA_vec , ALPHA_vec , mean(GAMMA_3.IA)*ones_vec , tyre_coeffs.FZ0*ones_vec , tyre_coeffs);
 t_vec_4 = MF96_t_vec(KAPPA_vec , ALPHA_vec , mean(GAMMA_3.IA)*ones_vec , tyre_coeffs.FZ0*ones_vec , tyre_coeffs);
 MZ0_vargamma_vec_4 = MF96_MZ0_vec(t_vec_4 , FY_vec , MZr_vec_4);
+
 % figure
 
 figure('Name','MZ0 vs Gamma')
@@ -867,6 +871,7 @@ plot(ALPHA_vec,MZ0_vargamma_vec_3,'-' , 'LineWidth',1 ,'DisplayName','$\gamma_2$
 plot(ALPHA_vec,MZ0_vargamma_vec_4,'-' , 'LineWidth',1 ,'DisplayName','$\gamma_3$')
 xlabel('$\alpha$ [-]')
 ylabel('$M_{z0}$ [Nm/S]')
+title('Different camber , $F_{z}$ = 220 [N] , $kappa$ = 0')
 legend 
 
 
