@@ -4,14 +4,15 @@ function res = resid_pure_MZ_varFz(P , MZ , KAPPA , ALPHA , GAMMA , FZ_vec , FY_
 %                                     vec , num   , vec   , num   , vec    , vec , struct
     tmp_tyre_data = tyre_data;
 
-    % [ qBz2 , qBz3 , qDz7 , qEz2 , qEz3 , qHz2 , qDz2 ] 
+    % [ qBz2 , qBz3 , qDz2 , qDz7 , qEz2 , qEz3 , qHz2 ] 
     tmp_tyre_data.qBz2 = P(1);
     tmp_tyre_data.qBz3 = P(2);
-    tmp_tyre_data.qDz7 = P(3);
-    tmp_tyre_data.qEz2 = P(4);
-    tmp_tyre_data.qEz3 = P(5);
-    tmp_tyre_data.qHz2 = P(6);
-    tmp_tyre_data.qDz2 = P(7);
+    tmp_tyre_data.qDz2 = P(3);
+    tmp_tyre_data.qDz7 = P(4);
+    tmp_tyre_data.qEz2 = P(5);
+    tmp_tyre_data.qEz3 = P(6);
+    tmp_tyre_data.qHz2 = P(7);
+    
 %     tmp_tyre_data.qHz4 = P(8);
 
 

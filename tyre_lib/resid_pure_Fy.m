@@ -26,7 +26,6 @@ function res = resid_pure_Fy(P,FY,ALPHA,GAMMA,FZ,tyre_data)
     for i=1:length(ALPHA)
        fy0  = MF96_FY0(0, ALPHA(i), GAMMA, FZ, tmp_tyre_data);
        res = res+(fy0-FY(i))^2;
-       %res = res+(fx0/FX(i)-1)^2;
     end
     
     % Compute the residuals

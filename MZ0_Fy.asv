@@ -767,10 +767,7 @@ ylabel('$M_{z0}$ [Nm/S]')
 title('Different camber , $F_{z}$ = 220 [N] , $kappa$ = 0')
 legend 
 
-resid_pure_MZ_vargamma = resid_pure_MZ_vargamma(P_cam,MZ_vec, 0, ALPHA_vec, GAMMA_vec , FZ0, FY_pred , tyre_coeffs)
-R2 = 1 - resid_pure_MZ_vargamma;
-RMSE = sqrt(resid_pure_MZ_vargamma*sum(MZ_vec.^2)/length(ALPHA_vec));
-fprintf('R^2 = %6.3f \nRMSE = %6.3f \n', R2, RMSE );
+
 
 %%
 data_gamma_0 = intersect_table_data(GAMMA_0 , FZ_220);
